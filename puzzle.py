@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+import cv2
 
 # will have to refactor eventually to meet the polymorphism requirement
 
@@ -34,15 +35,30 @@ class PuzzleGUI:
             self.image_path = path
             print("Loaded:", path)
 
-    def start_game(self):
-        if not self.image_path:
-            messagebox.showerror("Error", "Please select an image first.")
-            return
+    def process_image(self): # might make own class
+        img = cv2.imread(self.image_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, (400, 400))
 
+        self.cv_image = img
+
+        if img is None:
+            raise ValueError("Could not load image")
+
+    def start_game(self):
+        # add a check that makes sure an image is loaded
+        
         self.setup_frame.destroy()
         self.build_game_screen()
 
     def build_game_screen(self):
-        pass
+        self.game_frame = tk.Frame(self.window)
+        self.game_frame.pack(fill="both", expand=True)
+
+        self.left_frame = tk.Frame(self.game_frame, width=200, height=200, bg="lightgray")
+        self.left_frame.pack(side="left", expand=True)
+
+        self.right_frame = tk.Frame(self.game_frame, width=200, height=200, bg="white")
+        self.right_frame.pack(side="right", expand=True)
 
 main()
