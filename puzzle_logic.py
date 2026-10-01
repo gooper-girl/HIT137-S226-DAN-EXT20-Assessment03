@@ -199,3 +199,44 @@ class Board:
             
         if self.is_solved():
             self.scramble()
+        
+        
+    def player_move(self, transformation):
+        if self.is_solved():
+            return False
+        transformation.apply(self)
+        self.__moves += 1
+        self.__hint = None
+        return True
+    
+    def player_swap(self, pos1, pos2):
+        return self.player_move(Swap(pos1, pos2))
+    
+    def player_rotate(self, pos):
+        return self.player_move(Rotate(pos, 1))
+    
+    def player_flip(self, pos):
+        return self.player_move(Flip(pos, "horizontal"))
+    
+    
+    def use_hint(self):
+        if self.__hints_used >= 3 or self.is_solved():
+            return None
+        wrong = []
+        for pos in range (len(self.__tiles)):
+            if not self.is_tile_correct(pos):
+                wrong.append(pos)
+        pos = random.choice(wrong)
+        home = self.__tiles[pos].get_home()
+        self.__hint = (pos, home)
+        self.__hints_used += 1
+        return self.__hint
+    
+    def solve(self):
+        solved = [None] * len(self.__tiles)
+        for tile in self.__tiles:
+            tile.reset()
+            solved[tile.get_home()] = tile
+        self.__tiles = solved
+        self.__moves = 0
+        self.__hint = None
