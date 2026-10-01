@@ -24,3 +24,20 @@ class ImageProcessor:
         tile_size = self.__size // grid_size
         new_size = tile_size * grid_size
         return cv2.resize(square, (new_size, new_size))
+    
+    def split_image(self, image, grid_size):
+        tile_size = image.shape[0] // grid_size
+        pieces = []
+        for row in range(grid_size):
+            for col in range(grid_size):
+                y = row * tile_size
+                x = col * tile_size
+                pieces.append(image[y:y + tile_size, x:x + tile_size])
+        return pieces
+
+    def join_tiles(self, pieces, grid_size):
+        rows = []
+        for row in range(grid_size):
+            start = row * grid_size
+            rows.append(np.hstack(pieces[start:start + grid_size]))
+        return np.vstack(rows)
