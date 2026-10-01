@@ -102,3 +102,100 @@ class Flip(Transformation):
             board.get_tile(self.pos).flip_horizontal()
         else:
             board.get_tile(self.pos).flip_vertical()
+            
+
+class Board:
+    def __init__(self, image, grid_size=3):
+        self.__grid_size = grid_size
+        self.__processor = ImageProcessor()
+        self.__original = self.__processor.prepare_image(image, grid_size)
+        self.__tile_size = self.__original.shape[0] // grid_size
+        
+        self.__tiles = []
+        pieces = self.__processor.split_image(self.__original, grid_size)
+        for i in range(len(pieces)):
+            self.__tiles.append(Tile(i, pieces[i]))
+            
+        self.__moves = 0
+        self.__hints_used = 0
+        self.__hint = None
+        
+        self.scramble()
+        
+    def get_grid_size(self):
+        return self.__grid_size
+    
+    def get_tile_size(self):
+        return self.__tile_size
+    
+    def get_original_image(self):
+        return self.__original
+    
+    def get_moves(self):
+        return self.__moves
+    
+    def get_hints_left(self):
+        return 3 - self.__hints_used
+    
+    def get_hint(self):
+        return self.__hint
+    
+    def get_tile(self, pos):
+        return self.__tiles[pos]
+    
+    def get_puzzle_image(self):
+        pieces = []
+        for tile in self.__tiles:
+            pieces.append(tile.get_image())
+        return self.__processor.join_tiles(pieces, self.__grid_size)
+    
+    def is_tile_correct(self, pos):
+        tile = self.__tiles[pos]
+        return tile.get_home() == pos and tile.is_right_way_up()
+    
+    def count_incorrect(self):
+        count = 0
+        for pos in range(len(self.__tiles)):
+            if not self.is_tile_correct(pos):
+                count += 1
+        return count
+        
+    def is_solved(self):
+        return self.count_incorrect() == 0
+    
+    def click_to_position(self, x, y):
+        col = x // self.__tile_size
+        row = y // self.__tile_size
+        if row < 0 or row >= self.__grid_size or col < 0 or col >= self.__grid_size:
+            return None
+        return row * self.__grid_size + col
+    
+    def swap_tiles(self, pos1, pos2):
+        self.__tiles[pos1], self.__tiles[pos2] = self.__tiles[pos2], self.__tiles[pos1]
+        
+    def scramble(self):
+        amounts = {3: 6, 4: 12, 5: 20}
+        count = amounts[self.__grid_size]
+        total_tiles = len(self.__tiles)
+        
+        types = ["swap", "rotate", "flip"]
+        while len(types) < count:
+            types.append(random.choice(["swap", "rotate", "flip"]))
+            
+        transformations = []
+        for t in types:
+            if t == "swap":
+                pos1, pos2 = random.sample(range(total_tiles), 2)
+                transformations.append(Swap(pos1, pos2))
+            elif t == "rotate":
+                pos = random.randrange(total_tiles)
+                transformations.append(Rotate(pos, random.choice([1, 2, 3])))
+            else:
+                pos = random.randrange(total_tiles)
+                transformations.append(Flip(pos, random.choice(["horizontal", "vertical"])))
+                
+        for t in transformations:
+            t.apply(self)
+            
+        if self.is_solved():
+            self.scramble()
