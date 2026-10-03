@@ -44,12 +44,9 @@ class PuzzleGUI:
         # add a check that makes sure an image is loaded
         grid_size = self.grid_var.get()
 
-        processor = ImageProcessor()
+        self.board = Board(self.cv_img, self.grid_var.get())
 
-        self.cv_img = processor.load_image(self.image_path)
-        prepared = processor.prepare_image(self.cv_img, grid_size)
-
-        pil_img = Image.fromarray(prepared)
+        pil_img = self.board.get_original_image()
         self.prepared_image = ImageTk.PhotoImage(pil_img)
 
         self.setup_frame.destroy()
@@ -67,7 +64,6 @@ class PuzzleGUI:
         self.game_frame = tk.Frame(self.window)
         self.game_frame.pack(fill="both", expand=True)
 
-        self.board = Board(self.cv_img, self.grid_var.get())
         self.move_label = tk.Label(self.game_frame, text="Moves: 0").pack()
 
         self.left_frame = tk.Label(self.game_frame, image=self.prepared_image)
